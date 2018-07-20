@@ -1,0 +1,28 @@
+{{ range $server_name, $backend := var "SERVERS" | split "," | splitkv ":" }}
+server {
+  listen 80;
+  listen 443 ssl;
+  server_name {{ $server_name }};
+  ssl_certificate /ssl/{{ $server_name }}.crt;
+  ssl_certificate_key /ssl/{{ $server_name }}.key;
+
+  underscores_in_headers on;
+
+  location / {
+    # set external network ip address
+    set $custom_x_forwarded_for "93.184.216.34";
+
+    if ($http_x_test_client_ip != "") {
+      set $custom_x_forwarded_for $http_x_test_client_ip;
+    }
+
+    proxy_set_header X-Forwarded-Host $host:$server_port;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # set external network ip address
+    proxy_set_header X-Forwarded-For "93.184.216.34";
+    proxy_set_header Host $host;
+    proxy_pass http://{{ $backend }};
+  }
+}
+{{ end }}

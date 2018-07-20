@@ -1,0 +1,41 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: ../backend
+    networks:
+      - test-network
+  reverse-proxy:
+    build:
+      context: ../..
+      dockerfile: spec/reverse-proxy/Dockerfile
+    depends_on:
+      - backend
+    networks:
+      - test-network
+  elb:
+    environment:
+      SERVERS: hello.example.com:reverse-proxy
+    build:
+      context: ../elb
+    volumes:
+      - ../ssl:/ssl
+    depends_on:
+      - reverse-proxy
+    networks:
+      test-network:
+        aliases:
+          - hello.example.com
+  taster:
+    build:
+      context: ..
+      dockerfile: taster/Dockerfile
+    volumes:
+      - ../reverse-proxy/spec:/spec
+    working_dir: /spec
+    depends_on:
+      - elb
+    networks:
+      - test-network
+networks:
+  test-network:

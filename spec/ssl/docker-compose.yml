@@ -1,0 +1,7 @@
+version: '3'
+services:
+  ca:
+    build: .
+    volumes:
+      - .:/work
+    working_dir: /work
